@@ -1,0 +1,8 @@
+# Конфигурация MongoDB Atlas
+mongodb:
+  uri: "mongodb+srv://alibekdias36_db_user:di@s_o5@cluster0.lkhseyf.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
+  database: "student_job_finder"
+
+# Конфигурация сервера
+server:
+  port: "8080"
