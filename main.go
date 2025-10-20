@@ -3,9 +3,11 @@ package main
 import (
 	"context"
 	"log"
+	"net/http"
 	"os"
 	"time"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 
@@ -32,6 +34,16 @@ func main() {
 
 	r := gin.Default()
 
+	// Настройка CORS
+	r.Use(cors.New(cors.Config{
+		AllowOrigins:     []string{"*"}, // В продакшене укажите конкретные домены
+		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization"},
+		ExposeHeaders:    []string{"Content-Length"},
+		AllowCredentials: true,
+		MaxAge:           12 * time.Hour,
+	}))
+
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
@@ -49,15 +61,24 @@ func main() {
 	codeRepo := inmemory.NewInMemoryCodeRepo()
 	authService := usecases.NewAuthService(userRepo, codeRepo)
 	authHandler := handlers.NewAuthHandler(authService)
+
 	api := r.Group("/api")
 	{
+		// Health check endpoint
+		api.GET("/health", func(c *gin.Context) {
+			c.JSON(http.StatusOK, gin.H{
+				"status":  "ok",
+				"message": "Server is running",
+			})
+		})
+
 		api.POST("/request-code", authHandler.RequestCode)
 		api.POST("/verify-code", authHandler.VerifyCode)
 	}
 
 	port := os.Getenv("PORT")
 	if port == "" {
-		port = "8080"
+		port = "8081"
 	}
 	if err := r.Run(":" + port); err != nil {
 		log.Fatalf("server error: %v", err)
