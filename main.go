@@ -33,7 +33,7 @@ func main() {
 	r := gin.Default()
 
 	r.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"*"}, 
+		AllowOrigins:     []string{"*"},
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization"},
 		ExposeHeaders:    []string{"Content-Length"},
@@ -72,9 +72,19 @@ func main() {
 		api.POST("/verify-code", authHandler.VerifyCode)
 	}
 
+	authGroup := r.Group("/auth")
+	{
+		authGroup.POST("/register-password", authHandler.RegisterPassword)
+		authGroup.POST("/login-password", authHandler.LoginPassword)
+		authGroup.POST("/request-email-code", authHandler.RequestEmailCode)
+		authGroup.POST("/verify-email-code", authHandler.VerifyEmailCode)
+		authGroup.POST("/request-phone-code", authHandler.RequestCode)
+		authGroup.POST("/verify-phone-code", authHandler.VerifyCode)
+	}
+
 	port := os.Getenv("PORT")
 	if port == "" {
-		port = "8081"
+		port = "8080"
 	}
 	if err := r.Run(":" + port); err != nil {
 		log.Fatalf("server error: %v", err)

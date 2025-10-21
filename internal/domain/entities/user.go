@@ -1,15 +1,23 @@
 package entities
 
+import "time"
+
 type User struct {
-    ID    string
-    Phone string
-    Name  string
-    Role  string
+    ID           string
+    Email        string
+    Phone        string
+    PasswordHash string
+    Name         string
+    Role         string
+    IsVerified   bool
+    CreatedAt    time.Time
 }
 
 type VerificationCode struct {
-    Phone     string
-    Code      string
-    ExpiresAt int64 // unix
+    Identifier string // email or phone
+    Code       string
+    Type       string // "email" or "phone"
+    Attempts   int
+    ExpiresAt  int64 // unix
 }
 

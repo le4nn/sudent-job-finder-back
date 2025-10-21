@@ -2,11 +2,12 @@ package mongo
 
 import (
 	"context"
+	"errors"
+
 	"github.com/albkvv/student-job-finder-back/internal/domain/entities"
 	"github.com/albkvv/student-job-finder-back/internal/domain/repositories"
-    "go.mongodb.org/mongo-driver/bson"
-    "go.mongodb.org/mongo-driver/bson/primitive"
-    "go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 type MongoUserRepo struct {
@@ -14,42 +15,54 @@ type MongoUserRepo struct {
 }
 
 func NewMongoUserRepo(coll *mongo.Collection) repositories.UserRepository {
-	return &MongoUserRepo{coll: coll}
+	return &MongoUserRepo{
+		coll: coll,
+	}
 }
 
-func (r *MongoUserRepo) FindByPhone(phone string) (*entities.User, error) {
-	ctx := context.Background()
-	var m struct {
-		ID    primitive.ObjectID `bson:"_id"`
-		Phone string            `bson:"phone"`
-		Name  string            `bson:"name"`
-		Role  string            `bson:"role"`
-	}
-	if err := r.coll.FindOne(ctx, bson.M{"phone": phone}).Decode(&m); err != nil {
+func (r *MongoUserRepo) Create(ctx context.Context, user *entities.User) error {
+	_, err := r.coll.InsertOne(ctx, user)
+	return err
+}
+
+func (r *MongoUserRepo) FindByEmail(ctx context.Context, email string) (*entities.User, error) {
+	var user entities.User
+	err := r.coll.FindOne(ctx, bson.M{"email": email}).Decode(&user)
+	if err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			return nil, nil
+		}
 		return nil, err
 	}
-	return &entities.User{
-		ID:    m.ID.Hex(),
-		Phone: m.Phone,
-		Name:  m.Name,
-		Role:  m.Role,
-	}, nil
+	return &user, nil
 }
 
-func (r *MongoUserRepo) Create(u *entities.User) error {
-	ctx := context.Background()
-	insert := bson.M{
-		"phone": u.Phone,
-		"name":  u.Name,
-		"role":  u.Role,
-	}
-	res, err := r.coll.InsertOne(ctx, insert)
+func (r *MongoUserRepo) FindByPhone(ctx context.Context, phone string) (*entities.User, error) {
+	var user entities.User
+	err := r.coll.FindOne(ctx, bson.M{"phone": phone}).Decode(&user)
 	if err != nil {
-		return err
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			return nil, nil
+		}
+		return nil, err
 	}
-	id, ok := res.InsertedID.(primitive.ObjectID)
-	if ok {
-		u.ID = id.Hex()
+	return &user, nil
+}
+
+func (r *MongoUserRepo) FindByID(ctx context.Context, id string) (*entities.User, error) {
+	var user entities.User
+	err := r.coll.FindOne(ctx, bson.M{"_id": id}).Decode(&user)
+	if err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			return nil, nil
+		}
+		return nil, err
 	}
-	return nil
+	return &user, nil
+}
+
+func (r *MongoUserRepo) Update(ctx context.Context, user *entities.User) error {
+	update := bson.M{"$set": user}
+	_, err := r.coll.UpdateOne(ctx, bson.M{"_id": user.ID}, update)
+	return err
 }
