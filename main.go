@@ -19,12 +19,10 @@ import (
 )
 
 func main() {
-	// Загружаем переменные окружения из .env файла
 	if err := godotenv.Load(); err != nil {
 		log.Println("Файл .env не найден, используем системные переменные окружения")
 	}
 
-	// Устанавливаем MongoDB Atlas URI если не задан в переменных окружения
 	if os.Getenv("MONGODB_URI") == "" {
 		os.Setenv("MONGODB_URI", "mongodb+srv://alibekdias36_db_user:di%40s_o5@cluster0.lkhseyf.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0")
 	}
@@ -34,9 +32,8 @@ func main() {
 
 	r := gin.Default()
 
-	// Настройка CORS
 	r.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"*"}, // В продакшене укажите конкретные домены
+		AllowOrigins:     []string{"*"}, 
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization"},
 		ExposeHeaders:    []string{"Content-Length"},
@@ -64,7 +61,6 @@ func main() {
 
 	api := r.Group("/api")
 	{
-		// Health check endpoint
 		api.GET("/health", func(c *gin.Context) {
 			c.JSON(http.StatusOK, gin.H{
 				"status":  "ok",

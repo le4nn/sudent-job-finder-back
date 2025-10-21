@@ -15,10 +15,13 @@ func NewAuthHandler(service *usecases.AuthService) *AuthHandler {
 }
 
 func (h *AuthHandler) RequestCode(c *gin.Context) {
-    var req struct { Phone string `json:"phone" binding:"required"` }
+    var req struct {
+        Phone string `json:"phone" binding:"required"`
+        Role  string `json:"role" binding:"required,oneof=student employer"`
+    }
     if err := c.ShouldBindJSON(&req); err != nil {
         c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()}); return }
-    err := h.Service.RequestCode(req.Phone)
+    err := h.Service.RequestCode(req.Phone, req.Role)
     if err != nil {
         c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to send code"}); return }
     c.JSON(http.StatusOK, gin.H{"result": "sent"})

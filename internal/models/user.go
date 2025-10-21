@@ -21,6 +21,7 @@ type LoginRequest struct {
 
 type PhoneCodeRequest struct {
     Phone string `json:"phone" binding:"required"`
+    Role  string `json:"role" binding:"required,oneof=student employer"`
 }
 
 type PhoneCodeVerifyRequest struct {

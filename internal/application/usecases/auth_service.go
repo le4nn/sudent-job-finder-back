@@ -16,7 +16,7 @@ type AuthService struct {
 func NewAuthService(u repositories.UserRepository, c repositories.VerificationCodeRepository) *AuthService {
 	return &AuthService{UserRepo: u, CodeRepo: c}
 }
-func (a *AuthService) RequestCode(phone string) error {
+func (a *AuthService) RequestCode(phone, role string) error {
 	code := utils.GenerateNumericCode(6)
 	exp := time.Now().Add(5 * time.Minute).Unix()
 	if err := a.CodeRepo.SetCode(phone, code, exp); err != nil {
@@ -24,7 +24,7 @@ func (a *AuthService) RequestCode(phone string) error {
 	}
 	user, err := a.UserRepo.FindByPhone(phone)
 	if err != nil || user == nil {
-		u := &entities.User{Phone: phone, Role: "student"}
+		u := &entities.User{Phone: phone, Role: role}
 		a.UserRepo.Create(u)
 	}
 	utils.LogSMSToConsole(phone, code)
