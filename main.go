@@ -53,11 +53,19 @@ func main() {
 	if dbName == "" {
 		dbName = "app"
 	}
+	
+	// User repository and service
 	usersColl := client.Database(dbName).Collection("users")
 	userRepo := mongo.NewMongoUserRepo(usersColl)
 	codeRepo := inmemory.NewInMemoryCodeRepo()
 	authService := usecases.NewAuthService(userRepo, codeRepo)
 	authHandler := handlers.NewAuthHandler(authService)
+	
+	// Vacancy repository and service
+	vacanciesColl := client.Database(dbName).Collection("vacancies")
+	vacancyRepo := mongo.NewMongoVacancyRepo(vacanciesColl)
+	vacancyService := usecases.NewVacancyService(vacancyRepo)
+	vacancyHandler := handlers.NewVacancyHandler(vacancyService)
 
 	api := r.Group("/api")
 	{
@@ -70,6 +78,14 @@ func main() {
 
 		api.POST("/request-code", authHandler.RequestCode)
 		api.POST("/verify-code", authHandler.VerifyCode)
+		
+		// Vacancy routes
+		api.POST("/vacancies", vacancyHandler.CreateVacancy)
+		api.GET("/vacancies", vacancyHandler.GetAllVacancies)
+		api.GET("/vacancies/:id", vacancyHandler.GetVacancy)
+		api.PUT("/vacancies/:id", vacancyHandler.UpdateVacancy)
+		api.PATCH("/vacancies/:id/status", vacancyHandler.UpdateVacancyStatus)
+		api.DELETE("/vacancies/:id", vacancyHandler.DeleteVacancy)
 	}
 
 	authGroup := r.Group("/auth")
